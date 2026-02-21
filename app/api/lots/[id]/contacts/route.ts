@@ -1,24 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { data, error } = await supabase.from('contacts').select('*').eq('lot_id', params.id).order('date', { ascending: false })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json()
-  const contact = await prisma.contact.create({
-    data: {
-      lotId: params.id,
-      method: body.method,
-      notes: body.notes,
-      campaign: body.campaign,
-      response: body.response,
-      followUpDate: body.followUpDate ? new Date(body.followUpDate) : null,
-    },
-  })
-
-  // Auto-update lead status if it's still 'new'
-  const lot = await prisma.lot.findUnique({ where: { id: params.id } })
-  if (lot && lot.leadStatus === 'new') {
-    await prisma.lot.update({ where: { id: params.id }, data: { leadStatus: 'contacted' } })
-  }
-
-  return NextResponse.json(contact, { status: 201 })
+  const { data, error } = await supabase.from('contacts').insert({ ...body, lot_id: params.id }).select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
 }

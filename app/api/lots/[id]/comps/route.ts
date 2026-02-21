@@ -1,28 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
+
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { data, error } = await supabase.from('comps').select('*').eq('lot_id', params.id).order('sale_date', { ascending: false })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json()
-  const pricePerSqft = body.salePrice && body.sqft ? body.salePrice / body.sqft : null
-
-  const comp = await prisma.comp.create({
-    data: {
-      lotId: params.id,
-      address: body.address,
-      salePrice: body.salePrice,
-      sqft: body.sqft,
-      saleDate: new Date(body.saleDate),
-      pricePerSqft,
-    },
-  })
-  return NextResponse.json(comp, { status: 201 })
-}
-
-export async function DELETE(req: NextRequest) {
-  const { searchParams } = new URL(req.url)
-  const compId = searchParams.get('compId')
-  if (compId) {
-    await prisma.comp.delete({ where: { id: compId } })
-  }
-  return NextResponse.json({ ok: true })
+  const pricePerSqft = body.sqft > 0 ? body.sale_price / body.sqft : null
+  const { data, error } = await supabase.from('comps').insert({ ...body, lot_id: params.id, price_per_sqft: pricePerSqft }).select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data, { status: 201 })
 }

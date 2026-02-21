@@ -1,40 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
-  const type = searchParams.get('type') || 'all'
-  const status = searchParams.get('status')
-  const buyBoxId = searchParams.get('buybox')
+  const format = searchParams.get('format') || 'json'
 
-  const where: any = {}
-  if (status && status !== 'all') where.leadStatus = status
-  if (type === 'absentee') where.isAbsenteeOwner = true
-  if (type === 'delinquent') where.taxStatus = 'delinquent'
+  const { data: lots, error } = await supabase.from('lots').select('*').order('lead_score', { ascending: false })
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  if (buyBoxId) {
-    const buyBox = await prisma.buyBox.findUnique({ where: { id: buyBoxId } })
-    if (buyBox) {
-      const targetZips = JSON.parse(buyBox.targetZips || '[]')
-      if (targetZips.length > 0) where.propertyZip = { in: targetZips }
-    }
+  if (format === 'csv') {
+    const headers = Object.keys(lots?.[0] || {})
+    const csv = [headers.join(','), ...(lots || []).map(lot =>
+      headers.map(h => JSON.stringify((lot as any)[h] ?? '')).join(',')
+    )].join('\n')
+    return new NextResponse(csv, {
+      headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename=lotscout-export.csv' },
+    })
   }
 
-  const lots = await prisma.lot.findMany({ where, orderBy: { leadScore: 'desc' } })
-
-  const csvRows = [
-    ['Parcel ID', 'Owner Name', 'Owner Mail Address', 'Owner Mail City', 'Owner Mail State', 'Owner Mail Zip', 'Property Address', 'Property City', 'Property Zip', 'County', 'Zoning', 'Lot Acres', 'Tax Value', 'Tax Status', 'Lead Score', 'Lead Status', 'Neighborhood'].join(','),
-    ...lots.map(l => [
-      l.parcelId, `"${l.ownerName}"`, `"${l.ownerMailAddress || ''}"`, `"${l.ownerMailCity || ''}"`, l.ownerMailState || '', l.ownerMailZip || '',
-      `"${l.propertyAddress}"`, `"${l.propertyCity || ''}"`, l.propertyZip, l.county, l.zoning || '',
-      l.lotSizeAcres?.toFixed(2) || '', l.taxAssessedValue || '', l.taxStatus, l.leadScore, l.leadStatus, `"${l.neighborhood || ''}"`
-    ].join(','))
-  ].join('\n')
-
-  return new NextResponse(csvRows, {
-    headers: {
-      'Content-Type': 'text/csv',
-      'Content-Disposition': `attachment; filename="lotscout-export-${new Date().toISOString().split('T')[0]}.csv"`,
-    },
-  })
+  return NextResponse.json(lots)
 }

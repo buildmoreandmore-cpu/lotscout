@@ -1,35 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const body = await req.json()
-  
-  const existing = await prisma.deal.findUnique({ where: { id: params.id } })
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  const { data, error } = await supabase.from('deals').update(body).eq('id', params.id).select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
+}
 
-  const buildSqft = body.buildSqft ?? existing.buildSqft
-  const buildCostPerSqft = body.buildCostPerSqft ?? existing.buildCostPerSqft
-  const totalBuildCost = buildSqft * buildCostPerSqft
-  const estimatedArv = body.estimatedArv ?? existing.estimatedArv ?? 0
-  const wholesaleFee = body.wholesaleFee ?? existing.wholesaleFee
-  const maxLotOffer = estimatedArv * 0.80 - totalBuildCost - wholesaleFee
-
-  const deal = await prisma.deal.update({
-    where: { id: params.id },
-    data: { ...body, totalBuildCost, maxLotOffer: Math.max(0, maxLotOffer) },
-  })
-
-  // Sync lot status with deal status
-  if (body.status) {
-    const statusMap: Record<string, string> = {
-      offered: 'interested',
-      accepted: 'under_contract',
-      closed: 'closed',
-    }
-    if (statusMap[body.status]) {
-      await prisma.lot.update({ where: { id: deal.lotId }, data: { leadStatus: statusMap[body.status] } })
-    }
-  }
-
-  return NextResponse.json(deal)
+export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { error } = await supabase.from('deals').delete().eq('id', params.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

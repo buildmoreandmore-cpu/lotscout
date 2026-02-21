@@ -1,48 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
-import { calculateLeadScore } from '@/lib/scoring'
+import { supabase } from '@/lib/supabase'
+import { snakeToCamel, camelToSnake } from '@/lib/transform'
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
-  const lot = await prisma.lot.findUnique({
-    where: { id: params.id },
-    include: {
-      contacts: { orderBy: { date: 'desc' } },
-      comps: { orderBy: { saleDate: 'desc' } },
-      deal: true,
-    },
-  })
-  if (!lot) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-  return NextResponse.json(lot)
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { data, error } = await supabase.from('lots').select('*').eq('id', params.id).single()
+  if (error) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  return NextResponse.json(snakeToCamel(data))
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
-  const body = await req.json()
-
-  const settings = await prisma.settings.findUnique({ where: { id: 'default' } })
-  const neighborhoodScores = settings ? JSON.parse(settings.neighborhoodScores) : {}
-
-  const existing = await prisma.lot.findUnique({ where: { id: params.id } })
-  if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-
-  const merged = { ...existing, ...body }
-  const score = calculateLeadScore({
-    zoning: merged.zoning,
-    lotSizeAcres: merged.lotSizeAcres,
-    isAbsenteeOwner: merged.isAbsenteeOwner,
-    taxDelinquentYrs: merged.taxDelinquentYrs,
-    lastSaleDate: merged.lastSaleDate,
-    propertyZip: merged.propertyZip,
-    neighborhood: merged.neighborhood,
-  }, { neighborhoodScores })
-
-  const lot = await prisma.lot.update({
-    where: { id: params.id },
-    data: { ...body, leadScore: score, lastSaleDate: body.lastSaleDate ? new Date(body.lastSaleDate) : undefined },
-  })
-  return NextResponse.json(lot)
+  const body = camelToSnake(await req.json())
+  const { data, error } = await supabase.from('lots').update(body).eq('id', params.id).select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(snakeToCamel(data))
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  await prisma.lot.delete({ where: { id: params.id } })
-  return NextResponse.json({ ok: true })
+export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const { error } = await supabase.from('lots').delete().eq('id', params.id)
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ success: true })
 }

@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET() {
-  let settings = await prisma.settings.findUnique({ where: { id: 'default' } })
-  if (!settings) {
-    settings = await prisma.settings.create({
-      data: { id: 'default', neighborhoodScores: '{}' },
-    })
-  }
-  return NextResponse.json(settings)
+  const { data, error } = await supabase.from('settings').select('*').eq('id', 'default').single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }
 
 export async function PATCH(req: NextRequest) {
   const body = await req.json()
-  if (body.neighborhoodScores && typeof body.neighborhoodScores === 'object') {
-    body.neighborhoodScores = JSON.stringify(body.neighborhoodScores)
+  if (body.neighborhood_scores && typeof body.neighborhood_scores === 'object') {
+    body.neighborhood_scores = JSON.stringify(body.neighborhood_scores)
   }
-  const settings = await prisma.settings.update({
-    where: { id: 'default' },
-    data: body,
-  })
-  return NextResponse.json(settings)
+  const { data, error } = await supabase.from('settings').update(body).eq('id', 'default').select().single()
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json(data)
 }

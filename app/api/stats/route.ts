@@ -1,40 +1,71 @@
 import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/db'
+import { supabase } from '@/lib/supabase'
 
 export async function GET() {
-  const [totalLots, sampleCount, statusCounts, zipCounts, scoreCounts, delinquentCount, absenteeCount] = await Promise.all([
-    prisma.lot.count(),
-    prisma.lot.count({ where: { isSample: true } }),
-    prisma.lot.groupBy({ by: ['leadStatus'], _count: { id: true } }),
-    prisma.lot.groupBy({ by: ['propertyZip'], _count: { id: true }, _avg: { leadScore: true, taxAssessedValue: true } }),
-    prisma.lot.aggregate({ _avg: { leadScore: true }, _max: { leadScore: true }, _min: { leadScore: true } }),
-    prisma.lot.count({ where: { taxStatus: 'delinquent' } }),
-    prisma.lot.count({ where: { isAbsenteeOwner: true } }),
+  const [
+    { count: totalLots },
+    { count: sampleCount },
+    { count: delinquentCount },
+    { count: absenteeCount },
+    { data: allLots },
+    { data: deals },
+    { data: pipelineDeals },
+  ] = await Promise.all([
+    supabase.from('lots').select('*', { count: 'exact', head: true }),
+    supabase.from('lots').select('*', { count: 'exact', head: true }).eq('is_sample', true),
+    supabase.from('lots').select('*', { count: 'exact', head: true }).eq('tax_status', 'delinquent'),
+    supabase.from('lots').select('*', { count: 'exact', head: true }).eq('is_absentee_owner', true),
+    supabase.from('lots').select('lead_status, lead_score, property_zip, tax_assessed_value'),
+    supabase.from('deals').select('*').eq('status', 'closed'),
+    supabase.from('deals').select('max_lot_offer').neq('status', 'closed'),
   ])
 
-  const deals = await prisma.deal.findMany({ where: { status: 'closed' } })
-  const totalRevenue = deals.reduce((sum, d) => sum + (d.wholesaleFee || 0), 0)
+  const lots = allLots || []
 
-  const pipelineValue = await prisma.deal.aggregate({
-    where: { status: { not: 'closed' } },
-    _sum: { maxLotOffer: true },
-  })
+  // Status counts
+  const statusCounts: Record<string, number> = {}
+  for (const lot of lots) {
+    statusCounts[lot.lead_status] = (statusCounts[lot.lead_status] || 0) + 1
+  }
+
+  // Zip breakdown
+  const zipMap: Record<string, { count: number; totalScore: number; totalTax: number }> = {}
+  for (const lot of lots) {
+    const zip = lot.property_zip
+    if (!zipMap[zip]) zipMap[zip] = { count: 0, totalScore: 0, totalTax: 0 }
+    zipMap[zip].count++
+    zipMap[zip].totalScore += lot.lead_score || 0
+    zipMap[zip].totalTax += lot.tax_assessed_value || 0
+  }
+  const zipBreakdown = Object.entries(zipMap).map(([zip, v]) => ({
+    zip,
+    count: v.count,
+    avgScore: Math.round(v.totalScore / v.count),
+    avgTaxValue: Math.round(v.totalTax / v.count),
+  }))
+
+  // Score stats
+  const scores = lots.map(l => l.lead_score || 0)
+  const scoreStats = {
+    _avg: { leadScore: scores.length ? scores.reduce((a, b) => a + b, 0) / scores.length : 0 },
+    _max: { leadScore: scores.length ? Math.max(...scores) : 0 },
+    _min: { leadScore: scores.length ? Math.min(...scores) : 0 },
+  }
+
+  const closedDeals = deals || []
+  const totalRevenue = closedDeals.reduce((sum: number, d: any) => sum + (d.wholesale_fee || 0), 0)
+  const pipelineValue = (pipelineDeals || []).reduce((sum: number, d: any) => sum + (d.max_lot_offer || 0), 0)
 
   return NextResponse.json({
-    totalLots,
-    statusCounts: statusCounts.reduce((acc, s) => ({ ...acc, [s.leadStatus]: s._count.id }), {} as Record<string, number>),
-    zipBreakdown: zipCounts.map(z => ({
-      zip: z.propertyZip,
-      count: z._count.id,
-      avgScore: Math.round(z._avg.leadScore || 0),
-      avgTaxValue: Math.round(z._avg.taxAssessedValue || 0),
-    })),
-    scoreStats: scoreCounts,
-    delinquentCount,
-    absenteeCount,
-    closedDeals: deals.length,
+    totalLots: totalLots || 0,
+    statusCounts,
+    zipBreakdown,
+    scoreStats,
+    delinquentCount: delinquentCount || 0,
+    absenteeCount: absenteeCount || 0,
+    closedDeals: closedDeals.length,
     totalRevenue,
-    pipelineValue: pipelineValue._sum.maxLotOffer || 0,
-    sampleCount,
+    pipelineValue,
+    sampleCount: sampleCount || 0,
   })
 }
