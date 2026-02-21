@@ -6,7 +6,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const search = searchParams.get('search')
-  const sortBy = searchParams.get('sortBy') || 'lead_score'
+  const rawSortBy = searchParams.get('sortBy') || 'leadScore'
+  // Convert camelCase sort field to snake_case
+  const sortBy = rawSortBy.replace(/[A-Z]/g, c => '_' + c.toLowerCase())
   const sortDir = searchParams.get('sortDir') || 'desc'
   const page = parseInt(searchParams.get('page') || '1')
   const limit = parseInt(searchParams.get('limit') || '50')
