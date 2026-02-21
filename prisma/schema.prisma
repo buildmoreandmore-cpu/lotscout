@@ -1,0 +1,125 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Lot {
+  id                String    @id @default(cuid())
+  parcelId          String    @unique
+  ownerName         String
+  ownerMailAddress  String?
+  ownerMailCity     String?
+  ownerMailState    String?
+  ownerMailZip      String?
+  propertyAddress   String
+  propertyCity      String?
+  propertyState     String    @default("GA")
+  propertyZip       String
+  county            String
+  zoning            String?
+  lotSizeAcres      Float?
+  lotSizeSqft       Float?
+  propertyClass     String?
+  taxAssessedValue  Float?
+  taxStatus         String    @default("current")
+  taxDelinquentYrs  Int       @default(0)
+  lastSaleDate      DateTime?
+  lastSalePrice     Float?
+  yearBuilt         Int?
+  neighborhood      String?
+  subdivision       String?
+  isAbsenteeOwner   Boolean   @default(false)
+  latitude          Float?
+  longitude         Float?
+  leadScore         Int       @default(0)
+  leadStatus        String    @default("new")
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  contacts    Contact[]
+  comps       Comp[]
+  deal        Deal?
+}
+
+model BuyBox {
+  id              String   @id @default(cuid())
+  name            String
+  zonings         String   // JSON array stored as string
+  minLotSizeAcres Float    @default(0.10)
+  maxLotSizeAcres Float    @default(0.35)
+  propertyTypes   String   @default("vacant,unimproved")
+  targetZips      String   // JSON array stored as string
+  maxTaxValue     Float    @default(100000)
+  absenteeOnly    Boolean  @default(false)
+  excludeZonings  String?  // JSON array
+  minLotSizeSqft  Float    @default(4000)
+  maxLotSizeSqft  Float?
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Contact {
+  id          String   @id @default(cuid())
+  lotId       String
+  lot         Lot      @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  date        DateTime @default(now())
+  method      String   // call, text, mail, door_knock
+  notes       String?
+  campaign    String?
+  response    String?
+  followUpDate DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([lotId])
+}
+
+model Comp {
+  id          String   @id @default(cuid())
+  lotId       String
+  lot         Lot      @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  address     String
+  salePrice   Float
+  sqft        Float
+  saleDate    DateTime
+  pricePerSqft Float?
+  createdAt   DateTime @default(now())
+
+  @@index([lotId])
+}
+
+model Deal {
+  id              String   @id @default(cuid())
+  lotId           String   @unique
+  lot             Lot      @relation(fields: [lotId], references: [id], onDelete: Cascade)
+  estimatedArv    Float?
+  buildCostPerSqft Float   @default(165)
+  buildSqft       Float    @default(1600)
+  totalBuildCost  Float?
+  maxLotOffer     Float?
+  wholesaleFee    Float    @default(10000)
+  builderMargin   Float    @default(0.20)
+  offerPrice      Float?
+  status          String   @default("analyzing") // analyzing, offered, accepted, closed
+  closingDate     DateTime?
+  actualProfit    Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Settings {
+  id                  String @id @default("default")
+  defaultBuildCost    Float  @default(165)
+  defaultBuildSqft    Float  @default(1600)
+  defaultWholesaleFee Float  @default(10000)
+  defaultBuilderMargin Float @default(0.20)
+  arvMultiplier       Float  @default(0.80)
+  darkMode            Boolean @default(true)
+  neighborhoodScores  String  @default("{}") // JSON: { "30310": 15, "30311": 12 }
+}
