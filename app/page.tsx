@@ -13,15 +13,23 @@ interface Stats {
   closedDeals: number
   totalRevenue: number
   pipelineValue: number
+  sampleCount: number
 }
 
 export default function Dashboard() {
   const [stats, setStats] = useState<Stats | null>(null)
   const [showCalc, setShowCalc] = useState(false)
+  const [clearing, setClearing] = useState(false)
 
-  useEffect(() => {
-    fetch('/api/stats').then(r => r.json()).then(setStats)
-  }, [])
+  const fetchStats = () => fetch('/api/stats').then(r => r.json()).then(setStats)
+  useEffect(() => { fetchStats() }, [])
+
+  const handleClearSample = async () => {
+    setClearing(true)
+    await fetch('/api/sample', { method: 'DELETE' })
+    await fetchStats()
+    setClearing(false)
+  }
 
   if (!stats) return <div className="flex items-center justify-center h-full"><div className="text-slate-500">Loading dashboard...</div></div>
 
@@ -45,6 +53,27 @@ export default function Dashboard() {
           {showCalc ? 'Hide Calculator' : 'Quick Calculator'}
         </button>
       </div>
+
+      {/* Sample Data Banner */}
+      {stats.sampleCount > 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 md:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-amber-400">
+              Sample Data Active &mdash; {stats.sampleCount} demo {stats.sampleCount === 1 ? 'lot' : 'lots'}
+            </p>
+            <p className="text-xs text-amber-400/70 mt-0.5">
+              These are fictional lots to demonstrate how LotScout works. Upload your own CSV or Quick Add real lots to get started.
+            </p>
+          </div>
+          <button
+            onClick={handleClearSample}
+            disabled={clearing}
+            className="btn-secondary text-sm shrink-0 border border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
+          >
+            {clearing ? 'Clearing...' : 'Clear Sample Data'}
+          </button>
+        </div>
+      )}
 
       {showCalc && (
         <div className="card">

@@ -2,8 +2,9 @@ import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
 export async function GET() {
-  const [totalLots, statusCounts, zipCounts, scoreCounts, delinquentCount, absenteeCount] = await Promise.all([
+  const [totalLots, sampleCount, statusCounts, zipCounts, scoreCounts, delinquentCount, absenteeCount] = await Promise.all([
     prisma.lot.count(),
+    prisma.lot.count({ where: { isSample: true } }),
     prisma.lot.groupBy({ by: ['leadStatus'], _count: { id: true } }),
     prisma.lot.groupBy({ by: ['propertyZip'], _count: { id: true }, _avg: { leadScore: true, taxAssessedValue: true } }),
     prisma.lot.aggregate({ _avg: { leadScore: true }, _max: { leadScore: true }, _min: { leadScore: true } }),
@@ -34,5 +35,6 @@ export async function GET() {
     closedDeals: deals.length,
     totalRevenue,
     pipelineValue: pipelineValue._sum.maxLotOffer || 0,
+    sampleCount,
   })
 }
