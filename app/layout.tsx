@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
 import Sidebar from '@/components/Sidebar'
+import Assistant from '@/components/Assistant'
 
 export const metadata: Metadata = {
   title: 'LotScout — Infill Lot Prospector',
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <main className="flex-1 overflow-y-auto bg-slate-950 px-4 py-4 md:px-6 md:py-6 pt-[72px] md:pt-6">
           {children}
         </main>
+        <Assistant />
       </body>
     </html>
   )
