@@ -49,11 +49,14 @@ export async function GET() {
       method: c.method,
     }))
 
-    pipeline[status].lots.push(snakeToCamel({
-      ...lot,
-      contacts: lotContacts,
-      deal: dealsByLot[lot.id] ? snakeToCamel(dealsByLot[lot.id]) : null,
-    }))
+    // Only include first 100 lots per stage to keep response size reasonable
+    if (pipeline[status].lots.length < 100) {
+      pipeline[status].lots.push(snakeToCamel({
+        ...lot,
+        contacts: lotContacts,
+        deal: dealsByLot[lot.id] ? snakeToCamel(dealsByLot[lot.id]) : null,
+      }))
+    }
   }
 
   // Find lots needing follow-up (contacted but no contact in last 7 days)

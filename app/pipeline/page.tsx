@@ -31,9 +31,14 @@ const statusConfig: Record<string, { label: string; color: string; bgClass: stri
   dead: { label: 'Dead', color: '#ef4444', bgClass: 'bg-red-500/10 border-red-500/30' },
 }
 
+const PAGE_SIZE = 25
+
 export default function PipelinePage() {
   const [data, setData] = useState<PipelineData | null>(null)
   const [expandedStatus, setExpandedStatus] = useState<string | null>('new')
+  const [updatingLot, setUpdatingLot] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+  const [visibleCount, setVisibleCount] = useState<Record<string, number>>({})
 
   useEffect(() => {
     fetch('/api/pipeline').then(r => r.json()).then(setData)
@@ -41,14 +46,29 @@ export default function PipelinePage() {
 
   if (!data) return <div className="text-slate-500 flex items-center justify-center h-full">Loading pipeline...</div>
 
-  const handleStatusChange = async (lotId: string, newStatus: string) => {
-    await fetch(`/api/lots/${lotId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ leadStatus: newStatus }),
-    })
-    const res = await fetch('/api/pipeline')
-    setData(await res.json())
+  const getVisible = (status: string) => visibleCount[status] || PAGE_SIZE
+
+  const handleStatusChange = async (lotId: string, oldStatus: string, newStatus: string) => {
+    if (newStatus === oldStatus) return
+    setUpdatingLot(lotId)
+    try {
+      const res = await fetch(`/api/lots/${lotId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadStatus: newStatus }),
+      })
+      if (!res.ok) throw new Error('Update failed')
+      const label = statusConfig[newStatus]?.label || newStatus
+      setToast(`Moved to ${label}`)
+      setTimeout(() => setToast(null), 2500)
+      const pipeRes = await fetch('/api/pipeline')
+      setData(await pipeRes.json())
+    } catch {
+      setToast('Failed to update — try again')
+      setTimeout(() => setToast(null), 3000)
+    } finally {
+      setUpdatingLot(null)
+    }
   }
 
   return (
@@ -77,11 +97,21 @@ export default function PipelinePage() {
         </div>
       )}
 
+      {/* Toast */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50 bg-slate-800 border border-slate-600 text-slate-200 px-4 py-2 rounded-lg shadow-lg text-sm animate-pulse">
+          {toast}
+        </div>
+      )}
+
       {/* Pipeline Columns */}
       <div className="space-y-3">
         {Object.entries(statusConfig).map(([status, config]) => {
           const stage = data.pipeline[status] || { count: 0, lots: [] }
           const isExpanded = expandedStatus === status
+          const visible = getVisible(status)
+          const visibleLots = stage.lots.slice(0, visible)
+          const hasMore = stage.lots.length > visible
 
           return (
             <div key={status} className={`border rounded-xl ${config.bgClass}`}>
@@ -101,8 +131,8 @@ export default function PipelinePage() {
                 <div className="px-3 pb-3 md:px-4 md:pb-4">
                   {/* Mobile card view */}
                   <div className="md:hidden space-y-2">
-                    {stage.lots.map(lot => (
-                      <div key={lot.id} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                    {visibleLots.map(lot => (
+                      <div key={lot.id} className={`bg-slate-800/50 rounded-lg p-3 space-y-2 transition-opacity ${updatingLot === lot.id ? 'opacity-50' : ''}`}>
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-slate-200 truncate">{lot.propertyAddress}</p>
@@ -118,7 +148,8 @@ export default function PipelinePage() {
                           </span>
                           <select
                             value={status}
-                            onChange={e => handleStatusChange(lot.id, e.target.value)}
+                            onChange={e => handleStatusChange(lot.id, status, e.target.value)}
+                            disabled={updatingLot === lot.id}
                             className="select text-xs py-1.5"
                           >
                             {Object.entries(statusConfig).map(([s, c]) => (
@@ -140,12 +171,12 @@ export default function PipelinePage() {
                           <th className="table-header">Owner</th>
                           <th className="table-header">ZIP</th>
                           <th className="table-header">Last Contact</th>
-                          <th className="table-header">Actions</th>
+                          <th className="table-header">Move To</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {stage.lots.map(lot => (
-                          <tr key={lot.id} className="border-b border-slate-700/30">
+                        {visibleLots.map(lot => (
+                          <tr key={lot.id} className={`border-b border-slate-700/30 transition-opacity ${updatingLot === lot.id ? 'opacity-50' : ''}`}>
                             <td className="table-cell">
                               <span className={`badge font-mono-nums ${lot.leadScore >= 75 ? 'score-green' : lot.leadScore >= 50 ? 'score-yellow' : 'score-red'}`}>
                                 {lot.leadScore}
@@ -162,7 +193,8 @@ export default function PipelinePage() {
                             <td className="table-cell">
                               <select
                                 value={status}
-                                onChange={e => handleStatusChange(lot.id, e.target.value)}
+                                onChange={e => handleStatusChange(lot.id, status, e.target.value)}
+                                disabled={updatingLot === lot.id}
                                 className="select text-xs py-1"
                               >
                                 {Object.entries(statusConfig).map(([s, c]) => (
@@ -175,6 +207,16 @@ export default function PipelinePage() {
                       </tbody>
                     </table>
                   </div>
+
+                  {/* Load more */}
+                  {hasMore && (
+                    <button
+                      onClick={() => setVisibleCount(prev => ({ ...prev, [status]: visible + PAGE_SIZE }))}
+                      className="mt-3 w-full text-center text-xs text-slate-400 hover:text-slate-200 py-2 border border-slate-700/30 rounded-lg"
+                    >
+                      Show more ({stage.lots.length - visible} remaining)
+                    </button>
+                  )}
                 </div>
               )}
             </div>
