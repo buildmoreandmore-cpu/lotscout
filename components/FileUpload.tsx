@@ -51,20 +51,20 @@ export default function FileUpload({ onComplete, onClose }: Props) {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-200">Upload CSV / Excel</h3>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-200">&times;</button>
+        <h3 className="text-base md:text-lg font-semibold text-slate-200">Upload CSV / Excel</h3>
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-200 p-1 text-xl leading-none">&times;</button>
       </div>
 
       {status === 'done' && result ? (
         <div className="space-y-3">
-          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4">
+          <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 md:p-4">
             <p className="text-green-400 font-medium">Import Complete</p>
             <p className="text-sm text-slate-300 mt-1">
               {result.imported} imported, {result.skipped} skipped of {result.total} rows
             </p>
           </div>
           {result.errors.length > 0 && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4">
+            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 md:p-4">
               <p className="text-red-400 font-medium text-sm">Errors:</p>
               {result.errors.map((e, i) => <p key={i} className="text-xs text-red-300">{e}</p>)}
             </div>
@@ -75,7 +75,7 @@ export default function FileUpload({ onComplete, onClose }: Props) {
         <div className="space-y-4">
           <div
             onClick={() => fileRef.current?.click()}
-            className="border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-green-500/50 transition-colors"
+            className="border-2 border-dashed border-slate-600 rounded-lg p-4 md:p-8 text-center cursor-pointer hover:border-green-500/50 active:border-green-500/70 transition-colors"
           >
             <input
               ref={fileRef}
@@ -85,10 +85,10 @@ export default function FileUpload({ onComplete, onClose }: Props) {
               className="hidden"
             />
             {file ? (
-              <p className="text-slate-200">{file.name} <span className="text-slate-500">({(file.size / 1024).toFixed(1)} KB)</span></p>
+              <p className="text-slate-200 text-sm truncate">{file.name} <span className="text-slate-500">({(file.size / 1024).toFixed(1)} KB)</span></p>
             ) : (
               <>
-                <p className="text-slate-400">Click to select a CSV or Excel file</p>
+                <p className="text-slate-400 text-sm">Tap to select a CSV or Excel file</p>
                 <p className="text-xs text-slate-600 mt-1">Supports county tax assessor exports</p>
               </>
             )}
@@ -96,10 +96,10 @@ export default function FileUpload({ onComplete, onClose }: Props) {
 
           <div className="bg-slate-900 rounded-lg p-3 text-xs text-slate-500">
             <p className="font-medium text-slate-400 mb-1">Supported columns:</p>
-            <p>Parcel ID, Owner Name, Property Address, ZIP, County, Zoning, Lot Size Acres/Sqft, Tax Assessed Value, Tax Status, Last Sale Date/Price, Year Built, Neighborhood</p>
+            <p>Parcel ID, Owner Name, Property Address, ZIP, County, Zoning, Lot Size, Tax Value, Tax Status, Sale Date/Price, Year Built, Neighborhood</p>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <button
               onClick={handleUpload}
               disabled={!file || status === 'parsing' || status === 'uploading'}
@@ -107,7 +107,7 @@ export default function FileUpload({ onComplete, onClose }: Props) {
             >
               {status === 'parsing' ? 'Parsing...' : status === 'uploading' ? 'Importing...' : 'Upload & Import'}
             </button>
-            <button onClick={onClose} className="btn-secondary">Cancel</button>
+            <button onClick={onClose} className="btn-secondary flex-1 sm:flex-none">Cancel</button>
           </div>
         </div>
       )}

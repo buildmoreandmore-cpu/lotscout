@@ -52,24 +52,24 @@ export default function PipelinePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-4 md:space-y-6 max-w-6xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-100">Pipeline</h1>
-        <p className="text-sm text-slate-500">Manage your outreach and deal flow</p>
+        <h1 className="text-xl md:text-2xl font-bold text-slate-100">Pipeline</h1>
+        <p className="text-xs md:text-sm text-slate-500">Manage your outreach and deal flow</p>
       </div>
 
       {/* Follow-up Alerts */}
       {data.needFollowUp.length > 0 && (
-        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
+        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 md:p-4">
           <h3 className="text-sm font-semibold text-yellow-400 mb-2">
             Follow-up Needed ({data.needFollowUp.length})
           </h3>
-          <div className="space-y-1">
+          <div className="space-y-2">
             {data.needFollowUp.slice(0, 5).map(lot => (
-              <div key={lot.id} className="flex items-center justify-between text-sm">
-                <span className="text-slate-300">{lot.propertyAddress} — {lot.ownerName}</span>
-                <span className="text-xs text-slate-500">
-                  Last contact: {lot.contacts[0] ? new Date(lot.contacts[0].date).toLocaleDateString() : 'Never'}
+              <div key={lot.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-sm">
+                <span className="text-slate-300 truncate">{lot.propertyAddress} — {lot.ownerName}</span>
+                <span className="text-xs text-slate-500 shrink-0">
+                  Last: {lot.contacts[0] ? new Date(lot.contacts[0].date).toLocaleDateString() : 'Never'}
                 </span>
               </div>
             ))}
@@ -87,60 +87,94 @@ export default function PipelinePage() {
             <div key={status} className={`border rounded-xl ${config.bgClass}`}>
               <button
                 onClick={() => setExpandedStatus(isExpanded ? null : status)}
-                className="w-full flex items-center justify-between p-4"
+                className="w-full flex items-center justify-between p-3 md:p-4"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: config.color }} />
-                  <h3 className="font-semibold text-slate-200">{config.label}</h3>
+                  <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: config.color }} />
+                  <h3 className="font-semibold text-slate-200 text-sm md:text-base">{config.label}</h3>
                   <span className="badge bg-slate-700 text-slate-300 font-mono-nums">{stage.count}</span>
                 </div>
-                <span className="text-slate-500">{isExpanded ? '−' : '+'}</span>
+                <span className="text-slate-500 text-lg">{isExpanded ? '−' : '+'}</span>
               </button>
 
               {isExpanded && stage.lots.length > 0 && (
-                <div className="px-4 pb-4">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-slate-700/50">
-                        <th className="table-header">Score</th>
-                        <th className="table-header">Address</th>
-                        <th className="table-header">Owner</th>
-                        <th className="table-header">ZIP</th>
-                        <th className="table-header">Last Contact</th>
-                        <th className="table-header">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {stage.lots.map(lot => (
-                        <tr key={lot.id} className="border-b border-slate-700/30">
-                          <td className="table-cell">
-                            <span className={`badge font-mono-nums ${lot.leadScore >= 75 ? 'score-green' : lot.leadScore >= 50 ? 'score-yellow' : 'score-red'}`}>
-                              {lot.leadScore}
-                            </span>
-                          </td>
-                          <td className="table-cell text-slate-200 text-sm">{lot.propertyAddress}</td>
-                          <td className="table-cell text-slate-300 text-sm">{lot.ownerName}</td>
-                          <td className="table-cell font-mono-nums text-slate-400 text-sm">{lot.propertyZip}</td>
-                          <td className="table-cell text-xs text-slate-500">
-                            {lot.contacts[0] ? (
-                              <span>{lot.contacts[0].method} — {new Date(lot.contacts[0].date).toLocaleDateString()}</span>
-                            ) : 'None'}
-                          </td>
-                          <td className="table-cell">
-                            <select
-                              value={status}
-                              onChange={e => handleStatusChange(lot.id, e.target.value)}
-                              className="select text-xs py-1"
-                            >
-                              {Object.entries(statusConfig).map(([s, c]) => (
-                                <option key={s} value={s}>{c.label}</option>
-                              ))}
-                            </select>
-                          </td>
+                <div className="px-3 pb-3 md:px-4 md:pb-4">
+                  {/* Mobile card view */}
+                  <div className="md:hidden space-y-2">
+                    {stage.lots.map(lot => (
+                      <div key={lot.id} className="bg-slate-800/50 rounded-lg p-3 space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-slate-200 truncate">{lot.propertyAddress}</p>
+                            <p className="text-xs text-slate-400 truncate">{lot.ownerName}</p>
+                          </div>
+                          <span className={`badge font-mono-nums shrink-0 ${lot.leadScore >= 75 ? 'score-green' : lot.leadScore >= 50 ? 'score-yellow' : 'score-red'}`}>
+                            {lot.leadScore}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs text-slate-500">
+                            {lot.contacts[0] ? `${lot.contacts[0].method} — ${new Date(lot.contacts[0].date).toLocaleDateString()}` : 'No contact'}
+                          </span>
+                          <select
+                            value={status}
+                            onChange={e => handleStatusChange(lot.id, e.target.value)}
+                            className="select text-xs py-1.5"
+                          >
+                            {Object.entries(statusConfig).map(([s, c]) => (
+                              <option key={s} value={s}>{c.label}</option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Desktop table view */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-slate-700/50">
+                          <th className="table-header">Score</th>
+                          <th className="table-header">Address</th>
+                          <th className="table-header">Owner</th>
+                          <th className="table-header">ZIP</th>
+                          <th className="table-header">Last Contact</th>
+                          <th className="table-header">Actions</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {stage.lots.map(lot => (
+                          <tr key={lot.id} className="border-b border-slate-700/30">
+                            <td className="table-cell">
+                              <span className={`badge font-mono-nums ${lot.leadScore >= 75 ? 'score-green' : lot.leadScore >= 50 ? 'score-yellow' : 'score-red'}`}>
+                                {lot.leadScore}
+                              </span>
+                            </td>
+                            <td className="table-cell text-slate-200 text-sm">{lot.propertyAddress}</td>
+                            <td className="table-cell text-slate-300 text-sm">{lot.ownerName}</td>
+                            <td className="table-cell font-mono-nums text-slate-400 text-sm">{lot.propertyZip}</td>
+                            <td className="table-cell text-xs text-slate-500">
+                              {lot.contacts[0] ? (
+                                <span>{lot.contacts[0].method} — {new Date(lot.contacts[0].date).toLocaleDateString()}</span>
+                              ) : 'None'}
+                            </td>
+                            <td className="table-cell">
+                              <select
+                                value={status}
+                                onChange={e => handleStatusChange(lot.id, e.target.value)}
+                                className="select text-xs py-1"
+                              >
+                                {Object.entries(statusConfig).map(([s, c]) => (
+                                  <option key={s} value={s}>{c.label}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               )}
             </div>

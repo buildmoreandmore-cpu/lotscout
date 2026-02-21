@@ -83,16 +83,16 @@ export default function SettingsPage() {
   const targetZips = ['30310', '30311', '30312', '30314', '30315', '30316', '30317', '30318', '30079', '30032', '30033', '30002']
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-6 md:space-y-8 max-w-4xl">
       <div>
-        <h1 className="text-2xl font-bold text-slate-100">Settings</h1>
-        <p className="text-sm text-slate-500">Configure defaults and buy box criteria</p>
+        <h1 className="text-xl md:text-2xl font-bold text-slate-100">Settings</h1>
+        <p className="text-xs md:text-sm text-slate-500">Configure defaults and buy box criteria</p>
       </div>
 
       {/* Deal Defaults */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Deal Defaults</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Deal Defaults</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
           <div>
             <label className="label">Build Cost ($/sqft)</label>
             <input
@@ -145,8 +145,8 @@ export default function SettingsPage() {
 
       {/* Neighborhood Scoring */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Neighborhood Scoring (0-15 bonus points)</h2>
-        <div className="grid grid-cols-3 md:grid-cols-4 gap-3">
+        <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Neighborhood Scoring (0-15 bonus points)</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {targetZips.map(zip => (
             <div key={zip}>
               <label className="label">{zip}</label>
@@ -163,8 +163,8 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="flex gap-3">
-        <button onClick={handleSave} disabled={saving} className="btn-primary">
+      <div>
+        <button onClick={handleSave} disabled={saving} className="btn-primary w-full sm:w-auto">
           {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Settings'}
         </button>
       </div>
@@ -172,13 +172,13 @@ export default function SettingsPage() {
       {/* Buy Box Management */}
       <div className="card">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-200">Buy Boxes</h2>
+          <h2 className="text-base md:text-lg font-semibold text-slate-200">Buy Boxes</h2>
           <button onClick={() => setShowNewBuyBox(true)} className="btn-secondary text-sm">New Buy Box</button>
         </div>
 
         {showNewBuyBox && (
-          <form onSubmit={handleCreateBuyBox} className="bg-slate-900 rounded-lg p-4 mb-4 space-y-3">
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <form onSubmit={handleCreateBuyBox} className="bg-slate-900 rounded-lg p-3 md:p-4 mb-4 space-y-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <label className="label">Name</label>
                 <input value={newBuyBox.name} onChange={e => setNewBuyBox(b => ({ ...b, name: e.target.value }))} className="input w-full" required />
@@ -205,26 +205,27 @@ export default function SettingsPage() {
               </div>
             </div>
             <div className="flex gap-2">
-              <button type="submit" className="btn-primary text-sm">Create</button>
-              <button type="button" onClick={() => setShowNewBuyBox(false)} className="btn-secondary text-sm">Cancel</button>
+              <button type="submit" className="btn-primary text-sm flex-1 sm:flex-none">Create</button>
+              <button type="button" onClick={() => setShowNewBuyBox(false)} className="btn-secondary text-sm flex-1 sm:flex-none">Cancel</button>
             </div>
           </form>
         )}
 
         <div className="space-y-2">
           {buyBoxes.map(bb => (
-            <div key={bb.id} className="flex items-center justify-between bg-slate-900 rounded-lg p-3">
-              <div>
-                <p className="font-medium text-slate-200">{bb.name} {bb.isDefault && <span className="badge bg-green-500/20 text-green-400 ml-2 text-xs">Default</span>}</p>
-                <p className="text-xs text-slate-500 mt-1">
-                  Zonings: {JSON.parse(bb.zonings).join(', ')} &middot;
-                  ZIPs: {JSON.parse(bb.targetZips).slice(0, 4).join(', ')}{JSON.parse(bb.targetZips).length > 4 ? '...' : ''} &middot;
-                  {bb.minLotSizeAcres}-{bb.maxLotSizeAcres} ac &middot;
-                  Max ${bb.maxTaxValue?.toLocaleString()}
+            <div key={bb.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 bg-slate-900 rounded-lg p-3">
+              <div className="min-w-0">
+                <p className="font-medium text-slate-200 text-sm">
+                  {bb.name} {bb.isDefault && <span className="badge bg-green-500/20 text-green-400 ml-2 text-xs">Default</span>}
+                </p>
+                <p className="text-xs text-slate-500 mt-1 truncate">
+                  {JSON.parse(bb.zonings).join(', ')} &middot;
+                  {JSON.parse(bb.targetZips).slice(0, 3).join(', ')}{JSON.parse(bb.targetZips).length > 3 ? '...' : ''} &middot;
+                  {bb.minLotSizeAcres}-{bb.maxLotSizeAcres} ac
                 </p>
               </div>
               {!bb.isDefault && (
-                <button onClick={() => handleDeleteBuyBox(bb.id)} className="text-red-400 hover:text-red-300 text-sm">Delete</button>
+                <button onClick={() => handleDeleteBuyBox(bb.id)} className="text-red-400 hover:text-red-300 text-sm shrink-0 py-1">Delete</button>
               )}
             </div>
           ))}

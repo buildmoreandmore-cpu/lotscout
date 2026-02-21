@@ -39,10 +39,10 @@ export default function QuickAdd({ onComplete, onClose }: Props) {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-slate-200">Quick Add Lot</h3>
-        <button onClick={onClose} className="text-slate-400 hover:text-slate-200">&times;</button>
+        <h3 className="text-base md:text-lg font-semibold text-slate-200">Quick Add Lot</h3>
+        <button onClick={onClose} className="text-slate-400 hover:text-slate-200 p-1 text-xl leading-none">&times;</button>
       </div>
-      <form onSubmit={handleSubmit} className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         <div>
           <label className="label">Parcel ID *</label>
           <input value={form.parcelId} onChange={e => set('parcelId', e.target.value)} className="input w-full" required />
@@ -116,11 +116,11 @@ export default function QuickAdd({ onComplete, onClose }: Props) {
           <label className="label">Notes</label>
           <textarea value={form.notes} onChange={e => set('notes', e.target.value)} className="input w-full" rows={2} />
         </div>
-        <div className="col-span-full flex gap-2">
+        <div className="col-span-full flex flex-col sm:flex-row gap-2">
           <button type="submit" disabled={saving} className="btn-primary flex-1">
             {saving ? 'Saving...' : 'Add Lot'}
           </button>
-          <button type="button" onClick={onClose} className="btn-secondary">Cancel</button>
+          <button type="button" onClick={onClose} className="btn-secondary flex-1 sm:flex-none">Cancel</button>
         </div>
       </form>
     </div>

@@ -24,8 +24,8 @@ export default function DealCalculator({ initialArv, onSave }: Props) {
 
   return (
     <div>
-      <h3 className="text-lg font-semibold text-slate-200 mb-4">Deal Calculator</h3>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+      <h3 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Deal Calculator</h3>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 md:gap-4 mb-6">
         <div>
           <label className="label">Est. ARV</label>
           <input type="number" value={arv} onChange={e => setArv(Number(e.target.value))} className="input w-full font-mono-nums" />
@@ -49,7 +49,7 @@ export default function DealCalculator({ initialArv, onSave }: Props) {
       </div>
 
       {/* Deal Stack */}
-      <div className="bg-slate-900 rounded-lg p-4 border border-slate-700">
+      <div className="bg-slate-900 rounded-lg p-3 md:p-4 border border-slate-700">
         <h4 className="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">Deal Stack</h4>
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
@@ -57,11 +57,11 @@ export default function DealCalculator({ initialArv, onSave }: Props) {
             <span className="font-mono-nums text-slate-200">{formatCurrency(deal.estimatedArv)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-slate-400">Max Lot Offer ({formatPercent(arvMultiplier)} rule)</span>
+            <span className="text-slate-400">Max Lot Offer <span className="hidden sm:inline">({formatPercent(arvMultiplier)} rule)</span></span>
             <span className="font-mono-nums text-green-400 font-bold">{formatCurrency(deal.maxLotOffer)}</span>
           </div>
           <div className="flex justify-between text-sm">
-            <span className="text-slate-400">Total Build Cost ({buildSqft} sqft × ${buildCost})</span>
+            <span className="text-slate-400">Build Cost <span className="hidden sm:inline">({buildSqft} sqft &times; ${buildCost})</span></span>
             <span className="font-mono-nums text-slate-200">{formatCurrency(deal.totalBuildCost)}</span>
           </div>
           <div className="flex justify-between text-sm">

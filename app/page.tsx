@@ -35,13 +35,13 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-6 max-w-7xl">
-      <div className="flex items-center justify-between">
+    <div className="space-y-4 md:space-y-6 max-w-7xl">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Dashboard</h1>
-          <p className="text-sm text-slate-500 mt-1">Atlanta Metro Infill Lot Pipeline</p>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-100">Dashboard</h1>
+          <p className="text-xs md:text-sm text-slate-500 mt-1">Atlanta Metro Infill Lot Pipeline</p>
         </div>
-        <button onClick={() => setShowCalc(!showCalc)} className="btn-primary text-sm">
+        <button onClick={() => setShowCalc(!showCalc)} className="btn-primary text-sm w-full sm:w-auto">
           {showCalc ? 'Hide Calculator' : 'Quick Calculator'}
         </button>
       </div>
@@ -53,58 +53,58 @@ export default function Dashboard() {
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         <div className="card">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Total Lots</p>
-          <p className="text-3xl font-bold text-slate-100 font-mono-nums mt-1">{formatNumber(stats.totalLots)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-slate-100 font-mono-nums mt-1">{formatNumber(stats.totalLots)}</p>
         </div>
         <div className="card">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Absentee Owners</p>
-          <p className="text-3xl font-bold text-green-400 font-mono-nums mt-1">{formatNumber(stats.absenteeCount)}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">Absentee</p>
+          <p className="text-2xl md:text-3xl font-bold text-green-400 font-mono-nums mt-1">{formatNumber(stats.absenteeCount)}</p>
         </div>
         <div className="card">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Tax Delinquent</p>
-          <p className="text-3xl font-bold text-yellow-400 font-mono-nums mt-1">{formatNumber(stats.delinquentCount)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-yellow-400 font-mono-nums mt-1">{formatNumber(stats.delinquentCount)}</p>
         </div>
         <div className="card">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Avg Lead Score</p>
-          <p className="text-3xl font-bold text-slate-100 font-mono-nums mt-1">{Math.round(stats.scoreStats._avg.leadScore || 0)}</p>
+          <p className="text-xs text-slate-500 uppercase tracking-wide">Avg Score</p>
+          <p className="text-2xl md:text-3xl font-bold text-slate-100 font-mono-nums mt-1">{Math.round(stats.scoreStats._avg.leadScore || 0)}</p>
         </div>
       </div>
 
       {/* Pipeline + Revenue */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 md:gap-4">
         <div className="card">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Closed Deals</p>
-          <p className="text-3xl font-bold text-green-400 font-mono-nums mt-1">{stats.closedDeals}</p>
+          <p className="text-2xl md:text-3xl font-bold text-green-400 font-mono-nums mt-1">{stats.closedDeals}</p>
         </div>
         <div className="card">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Total Revenue</p>
-          <p className="text-3xl font-bold text-green-400 font-mono-nums mt-1">{formatCurrency(stats.totalRevenue)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-green-400 font-mono-nums mt-1">{formatCurrency(stats.totalRevenue)}</p>
         </div>
         <div className="card">
           <p className="text-xs text-slate-500 uppercase tracking-wide">Pipeline Value</p>
-          <p className="text-3xl font-bold text-yellow-400 font-mono-nums mt-1">{formatCurrency(stats.pipelineValue)}</p>
+          <p className="text-2xl md:text-3xl font-bold text-yellow-400 font-mono-nums mt-1">{formatCurrency(stats.pipelineValue)}</p>
         </div>
       </div>
 
       {/* Pipeline Status Bars */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">Pipeline Breakdown</h2>
+        <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">Pipeline Breakdown</h2>
         <div className="space-y-3">
           {Object.entries(statusLabels).map(([key, label]) => {
             const count = stats.statusCounts[key] || 0
             const pct = stats.totalLots > 0 ? (count / stats.totalLots) * 100 : 0
             return (
-              <div key={key} className="flex items-center gap-3">
-                <span className="text-sm text-slate-400 w-32">{label}</span>
-                <div className="flex-1 bg-slate-700 rounded-full h-6 overflow-hidden">
+              <div key={key} className="flex items-center gap-2 md:gap-3">
+                <span className="text-xs md:text-sm text-slate-400 w-20 md:w-32 shrink-0 truncate">{label}</span>
+                <div className="flex-1 bg-slate-700 rounded-full h-5 md:h-6 overflow-hidden">
                   <div
                     className={`h-full rounded-full ${statusColors[key]} transition-all duration-500`}
                     style={{ width: `${Math.max(pct, count > 0 ? 2 : 0)}%` }}
                   />
                 </div>
-                <span className="text-sm font-mono-nums text-slate-300 w-10 text-right">{count}</span>
+                <span className="text-sm font-mono-nums text-slate-300 w-8 md:w-10 text-right">{count}</span>
               </div>
             )
           })}
@@ -113,9 +113,9 @@ export default function Dashboard() {
 
       {/* Neighborhood Breakdown */}
       <div className="card">
-        <h2 className="text-lg font-semibold text-slate-200 mb-4">By ZIP Code</h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
+        <h2 className="text-base md:text-lg font-semibold text-slate-200 mb-4">By ZIP Code</h2>
+        <div className="overflow-x-auto -mx-4 md:-mx-6 px-4 md:px-6">
+          <table className="w-full min-w-[400px]">
             <thead>
               <tr className="border-b border-slate-700">
                 <th className="table-header">ZIP</th>
