@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
 const MINIMAX_API = 'https://api.minimax.io/v1/chat/completions'
-const MINIMAX_KEY = process.env.MINIMAX_API_KEY || 'sk-api-UQ3nXuR7dKCbSCWY5K8IB2kSmBl7jTNy6jLffMeSyYGNvONc'
+const MINIMAX_KEY = process.env.MINIMAX_API_KEY || 'sk-api-7kRc6vA0ZZuQBFsL9hHXGJ4Xj16nsUvUfdInqKaBmlWNN92z7tNbjOgAOY1Y7ulqh7xoDkZpV4qcKvrfu5nuIjUgxrIBoqVokBdsy8Huyizdng_77b0gmO4'
 
 async function getContext(query: string) {
   const q = query.toLowerCase()
