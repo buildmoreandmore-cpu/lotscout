@@ -1,9 +1,24 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 
+interface LotCard {
+  id: string
+  address: string
+  zip: string
+  county: string
+  score: number
+  acres: number
+  assessed: number
+  zoning: string
+  owner: string
+  absentee: boolean
+  taxStatus: string
+}
+
 interface Message {
   role: 'user' | 'assistant'
   content: string
+  lots?: LotCard[]
 }
 
 export default function Assistant() {
@@ -33,7 +48,7 @@ export default function Assistant() {
         body: JSON.stringify({ message: userMsg }),
       })
       const data = await res.json()
-      setMessages(prev => [...prev, { role: 'assistant', content: data.response || 'No response' }])
+      setMessages(prev => [...prev, { role: 'assistant', content: data.response || 'No response', lots: data.lots }])
     } catch {
       setMessages(prev => [...prev, { role: 'assistant', content: 'Error connecting to assistant.' }])
     }
@@ -83,12 +98,50 @@ export default function Assistant() {
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-xl px-3 py-2 text-sm whitespace-pre-wrap ${
-              msg.role === 'user'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-800 text-slate-300 border border-slate-700'
-            }`}>
-              {msg.content}
+            <div className={`max-w-[90%] ${msg.role === 'user' ? '' : 'w-full'}`}>
+              <div className={`rounded-xl px-3 py-2 text-sm whitespace-pre-wrap ${
+                msg.role === 'user'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-800 text-slate-300 border border-slate-700'
+              }`}>
+                {msg.content}
+              </div>
+              {msg.lots && msg.lots.length > 0 && (
+                <div className="mt-2 space-y-1.5">
+                  {msg.lots.slice(0, 10).map(lot => (
+                    <a
+                      key={lot.id}
+                      href={`/lots?id=${lot.id}`}
+                      className="block bg-slate-800/80 border border-slate-700/50 rounded-lg px-3 py-2 hover:border-blue-500/50 transition-colors"
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-xs font-medium text-slate-200 truncate">{lot.address}</p>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${
+                          lot.score >= 75 ? 'bg-green-500/20 text-green-400' :
+                          lot.score >= 50 ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-red-500/20 text-red-400'
+                        }`}>{lot.score}</span>
+                      </div>
+                      <div className="flex items-center gap-2 mt-1 text-[10px] text-slate-500">
+                        <span>{lot.zip}</span>
+                        <span>•</span>
+                        <span>{lot.acres}ac</span>
+                        <span>•</span>
+                        <span>{lot.zoning}</span>
+                        <span>•</span>
+                        <span>${lot.assessed?.toLocaleString()}</span>
+                        {lot.absentee && <span className="text-orange-400 font-medium">• ABSENTEE</span>}
+                      </div>
+                      <p className="text-[10px] text-slate-400 mt-0.5 truncate">{lot.owner}</p>
+                    </a>
+                  ))}
+                  {msg.lots.length > 10 && (
+                    <p className="text-[10px] text-slate-500 text-center pt-1">
+                      +{msg.lots.length - 10} more lots
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))}
