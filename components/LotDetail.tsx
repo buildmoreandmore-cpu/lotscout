@@ -27,6 +27,7 @@ interface Lot {
   isAbsenteeOwner: boolean
   leadScore: number
   leadStatus: string
+  inPipeline: boolean
   neighborhood: string | null
   notes: string | null
   contacts: Contact[]
@@ -74,6 +75,15 @@ export default function LotDetail({ lotId, onBack }: Props) {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ leadStatus: newStatus }),
+    })
+    fetchLot()
+  }
+
+  const handleTogglePipeline = async () => {
+    await fetch(`/api/lots/${lotId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ inPipeline: !lot.inPipeline }),
     })
     fetchLot()
   }
@@ -134,10 +144,20 @@ export default function LotDetail({ lotId, onBack }: Props) {
           <h1 className="text-lg md:text-xl font-bold text-slate-100 truncate">{lot.propertyAddress}</h1>
           <p className="text-xs md:text-sm text-slate-400">{lot.propertyCity}, GA {lot.propertyZip} &middot; {lot.county} County</p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <span className={`badge text-lg font-mono-nums px-3 py-1 ${lot.leadScore >= 75 ? 'score-green' : lot.leadScore >= 50 ? 'score-yellow' : 'score-red'}`}>
             {lot.leadScore}
           </span>
+          <button
+            onClick={handleTogglePipeline}
+            className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+              lot.inPipeline
+                ? 'bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/30'
+                : 'bg-slate-700 text-slate-300 border border-slate-600 hover:bg-green-500/20 hover:text-green-400 hover:border-green-500/30'
+            }`}
+          >
+            {lot.inPipeline ? 'In Pipeline' : 'Add to Pipeline'}
+          </button>
           <select
             value={lot.leadStatus}
             onChange={e => handleStatusChange(e.target.value)}

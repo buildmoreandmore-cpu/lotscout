@@ -78,6 +78,14 @@ export default function PipelinePage() {
         <p className="text-xs md:text-sm text-slate-500">Manage your outreach and deal flow</p>
       </div>
 
+      {/* Empty state */}
+      {Object.values(data.pipeline).every(stage => stage.count === 0) && (
+        <div className="card text-center py-12">
+          <p className="text-slate-400 text-sm">No lots in your pipeline yet.</p>
+          <p className="text-slate-500 text-xs mt-2">Open a lot from the Lots page and click "Add to Pipeline" to start tracking it here.</p>
+        </div>
+      )}
+
       {/* Follow-up Alerts */}
       {data.needFollowUp.length > 0 && (
         <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 md:p-4">

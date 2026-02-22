@@ -21,6 +21,7 @@ interface Lot {
   isAbsenteeOwner: boolean
   leadScore: number
   leadStatus: string
+  inPipeline: boolean
   neighborhood: string | null
   latitude: number | null
   longitude: number | null
@@ -181,6 +182,7 @@ export default function LotsPage() {
                   {lot.taxAssessedValue && <span className="text-xs text-slate-400 font-mono-nums">{formatCurrency(lot.taxAssessedValue)}</span>}
                   {lot.taxStatus === 'delinquent' && <span className="badge bg-red-500/20 text-red-400 text-xs">{lot.taxDelinquentYrs}yr</span>}
                   {lot.isAbsenteeOwner && <span className="badge bg-purple-500/20 text-purple-400 text-xs">Absentee</span>}
+                  {lot.inPipeline && <span className="badge bg-green-500/20 text-green-400 text-xs">Pipeline</span>}
                   <span className={`badge status-${lot.leadStatus} text-xs capitalize`}>{lot.leadStatus.replace('_', ' ')}</span>
                 </div>
               </div>
@@ -246,7 +248,10 @@ export default function LotsPage() {
                       )}
                     </td>
                     <td className="table-cell">
-                      {lot.isAbsenteeOwner && <span className="badge bg-purple-500/20 text-purple-400 text-xs">Absentee</span>}
+                      <div className="flex flex-wrap gap-1">
+                        {lot.isAbsenteeOwner && <span className="badge bg-purple-500/20 text-purple-400 text-xs">Absentee</span>}
+                        {lot.inPipeline && <span className="badge bg-green-500/20 text-green-400 text-xs">Pipeline</span>}
+                      </div>
                     </td>
                     <td className="table-cell">
                       <span className={`badge status-${lot.leadStatus} text-xs capitalize`}>

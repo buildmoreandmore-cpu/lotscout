@@ -7,6 +7,7 @@ export async function GET() {
   const { data: lots, error } = await supabase
     .from('lots')
     .select('id, parcel_id, owner_name, property_address, property_zip, lead_score, lead_status, tax_assessed_value, neighborhood')
+    .eq('in_pipeline', true)
     .order('lead_score', { ascending: false })
     .limit(15000)
 
