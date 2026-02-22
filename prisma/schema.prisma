@@ -38,7 +38,6 @@ model Lot {
   leadScore         Int       @default(0)
   leadStatus        String    @default("new")
   notes             String?
-  isSample          Boolean   @default(false)
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 

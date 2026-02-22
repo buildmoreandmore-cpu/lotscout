@@ -4,7 +4,6 @@ import { supabase } from '@/lib/supabase'
 export async function GET() {
   const [
     { count: totalLots },
-    { count: sampleCount },
     { count: delinquentCount },
     { count: absenteeCount },
     { data: allLots },
@@ -12,7 +11,6 @@ export async function GET() {
     { data: pipelineDeals },
   ] = await Promise.all([
     supabase.from('lots').select('*', { count: 'exact', head: true }),
-    supabase.from('lots').select('*', { count: 'exact', head: true }).eq('is_sample', true),
     supabase.from('lots').select('*', { count: 'exact', head: true }).eq('tax_status', 'delinquent'),
     supabase.from('lots').select('*', { count: 'exact', head: true }).eq('is_absentee_owner', true),
     supabase.from('lots').select('lead_status, lead_score, property_zip, tax_assessed_value'),
@@ -66,6 +64,5 @@ export async function GET() {
     closedDeals: closedDeals.length,
     totalRevenue,
     pipelineValue,
-    sampleCount: sampleCount || 0,
   })
 }
