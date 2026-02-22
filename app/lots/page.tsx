@@ -168,7 +168,7 @@ export default function LotsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-slate-200 text-sm truncate">{lot.propertyAddress}</p>
+                    <p className="font-medium text-slate-200 text-sm">{lot.propertyAddress}</p>
                     <p className="text-xs text-slate-400 truncate mt-0.5">{lot.ownerName}</p>
                   </div>
                   <span className={`badge font-mono-nums shrink-0 ${lot.leadScore >= 75 ? 'score-green' : lot.leadScore >= 50 ? 'score-yellow' : 'score-red'}`}>
@@ -232,7 +232,7 @@ export default function LotsPage() {
                         {lot.leadScore}
                       </span>
                     </td>
-                    <td className="table-cell font-medium text-slate-200 max-w-[200px] truncate">{lot.propertyAddress}</td>
+                    <td className="table-cell font-medium text-slate-200">{lot.propertyAddress}</td>
                     <td className="table-cell text-slate-300 max-w-[150px] truncate">{lot.ownerName}</td>
                     <td className="table-cell font-mono-nums text-slate-400">{lot.propertyZip}</td>
                     <td className="table-cell">
