@@ -3,11 +3,12 @@ import { supabase } from '@/lib/supabase'
 import { snakeToCamel } from '@/lib/transform'
 
 export async function GET() {
-  // Get all lots with their latest contact
+  // Get all lots with their latest contact (raise default 1000 limit)
   const { data: lots, error } = await supabase
     .from('lots')
     .select('id, parcel_id, owner_name, property_address, property_zip, lead_score, lead_status, tax_assessed_value, neighborhood')
     .order('lead_score', { ascending: false })
+    .limit(15000)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
