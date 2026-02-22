@@ -99,7 +99,7 @@ function scoreLot(p: FultonParcel): number {
 }
 
 async function queryFulton(): Promise<FultonParcel[]> {
-  const where = `ImprAssess=0 AND LandAcres>=0.10 AND LandAcres<=0.35 AND TotAssess<100000 AND (ClassCode='R3' OR ClassCode='R4' OR ClassCode='R5')`
+  const where = `ImprAssess=0 AND LandAcres>=0.13 AND LandAcres<=0.20 AND TotAssess<100000 AND ClassCode='R3'`
   const fields = 'ParcelID,Address,Owner,OwnerAddr1,OwnerAddr2,LandAcres,TotAssess,LandAssess,ImprAssess,ClassCode,LUCode,NbrHood,TaxDist,Subdiv'
 
   let all: FultonParcel[] = []

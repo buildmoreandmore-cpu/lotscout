@@ -12,11 +12,14 @@ const DEKALB_API = 'https://dcgis.dekalbcountyga.gov/mapping/rest/services/TaxPa
 // Buy box defaults from seed.ts
 const BUY_BOX = {
   targetZips: ['30032', '30033', '30079'],
-  minAcres: 0.10,
-  maxAcres: 0.35,
+  minAcres: 0.13,
+  maxAcres: 0.20,
+  minSqft: 5700,
+  maxSqft: 8800,
   maxTaxValue: 100_000,
-  // Residential zonings only — exclude C-1, OI, I-*, etc
-  allowedZoningPrefixes: ['R-', 'MR-'],
+  // R1-R4 only — exclude MR, C-1, OI, I-*, etc
+  allowedZoningPrefixes: ['R-'],
+  excludeZoningPrefixes: ['MR-'],
   // Low assessed value signals vacant land (no structure)
   vacantValueThreshold: 60_000,
 }
@@ -54,7 +57,13 @@ function isAbsentee(parcel: DeKalbParcel): boolean {
 function isResidentialZoning(zoning: string): boolean {
   if (!zoning) return false
   const z = zoning.toUpperCase()
+  if (BUY_BOX.excludeZoningPrefixes?.some(p => z.startsWith(p))) return false
   return BUY_BOX.allowedZoningPrefixes.some(p => z.startsWith(p))
+}
+
+function isInSqftRange(acres: number): boolean {
+  const sqft = acres * 43560
+  return sqft >= BUY_BOX.minSqft && sqft <= BUY_BOX.maxSqft
 }
 
 function scoreLot(parcel: DeKalbParcel): number {
@@ -141,9 +150,9 @@ async function main() {
 
   console.log(`📦 Total parcels matching basic criteria: ${allParcels.length}`)
 
-  // Filter to residential zoning only
-  const residential = allParcels.filter(p => isResidentialZoning(p.ZONING))
-  console.log(`🏠 Residential zoning: ${residential.length}`)
+  // Filter to residential zoning only + sqft range
+  const residential = allParcels.filter(p => isResidentialZoning(p.ZONING) && isInSqftRange(p.ACREAGE))
+  console.log(`🏠 Residential zoning + 5700-8800 sqft: ${residential.length}`)
 
   // Score and rank
   const scored = residential.map(p => ({

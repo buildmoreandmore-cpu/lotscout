@@ -33,10 +33,13 @@ const SKIP_OWNERS = [
 
 const BUY_BOX = {
   targetZips: ['30032', '30033', '30079'],
-  minAcres: 0.10,
-  maxAcres: 0.35,
+  minAcres: 0.13,
+  maxAcres: 0.20,
+  minSqft: 5700,
+  maxSqft: 8800,
   maxTaxValue: 100_000,
-  allowedZoningPrefixes: ['R-', 'MR-'],
+  allowedZoningPrefixes: ['R-'],
+  excludeZoningPrefixes: ['MR-'],
 }
 
 const NEIGHBORHOOD_SCORES: Record<string, number> = {
@@ -59,7 +62,13 @@ function isSkippedOwner(name: string): boolean {
 }
 function isResidentialZoning(z: string): boolean {
   if (!z) return false
-  return BUY_BOX.allowedZoningPrefixes.some(p => z.toUpperCase().startsWith(p))
+  const upper = z.toUpperCase()
+  if (BUY_BOX.excludeZoningPrefixes?.some(p => upper.startsWith(p))) return false
+  return BUY_BOX.allowedZoningPrefixes.some(p => upper.startsWith(p))
+}
+function isInSqftRange(acres: number): boolean {
+  const sqft = acres * 43560
+  return sqft >= BUY_BOX.minSqft && sqft <= BUY_BOX.maxSqft
 }
 
 function scoreLot(p: Parcel): number {
@@ -201,6 +210,7 @@ async function main() {
   // 2. Filter & score
   const scored = parcels
     .filter(p => isResidentialZoning(p.ZONING))
+    .filter(p => isInSqftRange(p.ACREAGE))
     .filter(p => !isSkippedOwner(p.OWNERNME1))
     .map(p => ({ parcel: p, score: scoreLot(p), absentee: isAbsentee(p) }))
     .filter(s => s.score >= 50)
