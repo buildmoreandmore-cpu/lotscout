@@ -51,9 +51,11 @@ export default function LotsPage() {
   const [showQuickAdd, setShowQuickAdd] = useState(false)
   const [showMap, setShowMap] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   const fetchLots = useCallback(async () => {
     setLoading(true)
+    setError(null)
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     if (status !== 'all') params.set('status', status)
@@ -62,12 +64,23 @@ export default function LotsPage() {
     params.set('sortDir', sortDir)
     params.set('page', String(page))
     params.set('limit', '50')
-    const res = await fetch(`/api/lots?${params}`)
-    const data = await res.json()
-    setLots(data.lots)
-    setTotal(data.total)
-    setPages(data.pages)
-    setLoading(false)
+    try {
+      const res = await fetch(`/api/lots?${params}`)
+      const data = await res.json()
+      if (!res.ok || !Array.isArray(data.lots)) {
+        throw new Error(data.error || `Request failed (${res.status})`)
+      }
+      setLots(data.lots)
+      setTotal(data.total)
+      setPages(data.pages)
+    } catch (err) {
+      setLots([])
+      setTotal(0)
+      setPages(1)
+      setError(err instanceof Error ? err.message : 'Failed to load lots')
+    } finally {
+      setLoading(false)
+    }
   }, [search, status, buyBoxId, sortBy, sortDir, page])
 
   useEffect(() => { fetchLots() }, [fetchLots])
@@ -147,6 +160,16 @@ export default function LotsPage() {
           </select>
         </div>
       </div>
+
+      {error && (
+        <div className="card border border-red-500/30 bg-red-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-red-400">Failed to load lots</p>
+            <p className="text-xs text-red-400/70 mt-0.5">{error}</p>
+          </div>
+          <button onClick={fetchLots} className="btn-secondary text-sm shrink-0">Retry</button>
+        </div>
+      )}
 
       {showMap ? (
         <div className="card p-0 overflow-hidden h-[50vh] md:h-[600px]">

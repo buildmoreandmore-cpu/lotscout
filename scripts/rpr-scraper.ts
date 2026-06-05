@@ -6,13 +6,14 @@
  */
 
 import { chromium, Browser, Page } from 'playwright'
+import { requireEnv } from './lib/env'
 
 const RPR_LOGIN_URL = 'https://www.narrpr.com/'
-const RPR_USERNAME = 'JosephineDuCreay@gmail.com'
-const RPR_PASSWORD = 'Slrhomes$$@2024'
+const RPR_USERNAME = requireEnv('RPR_USERNAME')
+const RPR_PASSWORD = requireEnv('RPR_PASSWORD')
 
-const SUPABASE_URL = 'https://vbwcatbixcgakdwgdavl.supabase.co'
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZid2NhdGJpeGNnYWtkd2dkYXZsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MTY5MzM4NywiZXhwIjoyMDg3MjY5Mzg3fQ.2j0q61nh9cJJa420-SxBEJMA2SuPRft6azAPNT8-C_M'
+const SUPABASE_URL = requireEnv('SUPABASE_URL')
+const SUPABASE_KEY = requireEnv('SUPABASE_SERVICE_ROLE_KEY')
 
 interface LotForComps {
   id: string

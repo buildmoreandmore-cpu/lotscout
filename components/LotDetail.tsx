@@ -61,12 +61,41 @@ interface Props {
 
 export default function LotDetail({ lotId, onBack }: Props) {
   const [lot, setLot] = useState<Lot | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'details' | 'contacts' | 'comps' | 'deal'>('details')
   const [contactForm, setContactForm] = useState({ method: 'call', notes: '', campaign: '', followUpDate: '' })
   const [compForm, setCompForm] = useState({ address: '', salePrice: '', sqft: '', saleDate: '' })
 
-  const fetchLot = () => fetch(`/api/lots/${lotId}`).then(r => r.json()).then(setLot)
+  const fetchLot = async () => {
+    setError(null)
+    try {
+      const res = await fetch(`/api/lots/${lotId}`)
+      const data = await res.json()
+      if (!res.ok || !data?.id) {
+        throw new Error(data?.error || `Request failed (${res.status})`)
+      }
+      setLot({ ...data, contacts: data.contacts || [], comps: data.comps || [] })
+    } catch (err) {
+      setLot(null)
+      setError(err instanceof Error ? err.message : 'Failed to load lot')
+    }
+  }
   useEffect(() => { fetchLot() }, [lotId])
+
+  if (error) {
+    return (
+      <div className="space-y-4 max-w-5xl">
+        <button onClick={onBack} className="text-sm text-slate-500 hover:text-slate-300 py-1">&larr; Back to lots</button>
+        <div className="card border border-red-500/30 bg-red-500/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="text-sm font-medium text-red-400">Failed to load lot</p>
+            <p className="text-xs text-red-400/70 mt-0.5">{error}</p>
+          </div>
+          <button onClick={fetchLot} className="btn-secondary text-sm shrink-0">Retry</button>
+        </div>
+      </div>
+    )
+  }
 
   if (!lot) return <div className="text-slate-500">Loading...</div>
 
