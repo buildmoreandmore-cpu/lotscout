@@ -311,5 +311,10 @@ export const COUNTIES: CountyConfig[] = [
   dekalb,
 ]
 
-/** The four newly-added counties (default target when none specified). */
-export const NEW_COUNTY_KEYS = ['gwinnett', 'jackson', 'forsyth', 'paulding']
+/**
+ * Default target when no county is specified. Paulding is intentionally
+ * excluded: its public ArcGIS has no owner/value/address, and the only sources
+ * that do (qpublic, ReportAllUSA) are Cloudflare-gated / paid. Run it explicitly
+ * with `scout -- paulding` (scan-only) if needed.
+ */
+export const NEW_COUNTY_KEYS = ['gwinnett', 'jackson', 'forsyth']
