@@ -19,13 +19,19 @@ export async function GET() {
     const { data, error } = await supabase
       .from('lots')
       .select('county, property_city')
+      .order('id', { ascending: true }) // stable sort so pagination can't skip rows
       .range(offset, offset + pageSize - 1)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
     if (!data || data.length === 0) break
 
     for (const row of data) {
       if (row.county) counties.add(row.county)
-      if (row.property_city) cityByCounty.set(row.property_city, row.county || '')
+      if (row.property_city) {
+        // Title-case the label so ALL-CAPS GIS values (e.g. "DACULA") display
+        // cleanly; the API filters case-insensitively so the value still matches.
+        const city = String(row.property_city).toLowerCase().replace(/\b\w/g, c => c.toUpperCase())
+        cityByCounty.set(city, row.county || '')
+      }
     }
     if (data.length < pageSize) break
     offset += data.length

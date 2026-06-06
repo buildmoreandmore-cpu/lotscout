@@ -30,6 +30,12 @@ function num(v: any): number | null {
   return Number.isFinite(n) ? n : null
 }
 
+/** Normalize a city to Title Case (county GIS layers often store ALL CAPS). */
+function titleCase(s: string | null | undefined): string | null {
+  if (!s) return null
+  return s.toLowerCase().replace(/\b\w/g, c => c.toUpperCase()).trim() || null
+}
+
 // ───────────────────────── GWINNETT (Dacula 30019) ─────────────────────────
 // services3.arcgis.com hosted "Tax Master Table" — every lead field in one layer.
 // Values & acreage are space-padded STRINGS; CAST() works server-side.
@@ -55,7 +61,7 @@ const gwinnett: CountyConfig = {
       ownerMailState: a.MAILSTAT || null,
       ownerMailZip: (a.MAILZIP || '').slice(0, 5) || null,
       propertyAddress: (a.LOCADDR || '').trim() || `Parcel ${String(a.PIN).trim()}`,
-      propertyCity: a.LOCCITY || 'Dacula',
+      propertyCity: titleCase(a.LOCCITY) || 'Dacula',
       propertyState: 'GA',
       propertyZip: a.LOCZIP || '30019',
       county: 'Gwinnett',
@@ -283,7 +289,7 @@ const dekalb: CountyConfig = {
       ownerMailState: a.PSTLSTATE || 'GA',
       ownerMailZip: (a.PSTLZIP5 || '').slice(0, 5) || null,
       propertyAddress: (a.SITEADDRESS || '').trim() || `Parcel ${String(a.PARCELID).trim()}`,
-      propertyCity: a.CITY || 'Decatur',
+      propertyCity: titleCase(a.CITY) || 'Decatur',
       propertyState: 'GA',
       propertyZip: a.ZIP,
       county: 'DeKalb',

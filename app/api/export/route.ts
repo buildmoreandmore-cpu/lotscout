@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   let query = supabase.from('lots').select('*').order('lead_score', { ascending: false })
   if (status && status !== 'all') query = query.eq('lead_status', status)
   if (county && county !== 'all') query = query.eq('county', county)
-  if (city && city !== 'all') query = query.eq('property_city', city)
+  if (city && city !== 'all') query = query.ilike('property_city', city)
 
   const { data: lots, error } = await query
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
