@@ -6,6 +6,8 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const status = searchParams.get('status')
   const search = searchParams.get('search')
+  const county = searchParams.get('county')
+  const city = searchParams.get('city')
   const rawSortBy = searchParams.get('sortBy') || 'leadScore'
   // Convert camelCase sort field to snake_case
   const sortBy = rawSortBy.replace(/[A-Z]/g, c => '_' + c.toLowerCase())
@@ -16,6 +18,8 @@ export async function GET(req: NextRequest) {
   let query = supabase.from('lots').select('*', { count: 'exact' })
 
   if (status && status !== 'all') query = query.eq('lead_status', status)
+  if (county && county !== 'all') query = query.eq('county', county)
+  if (city && city !== 'all') query = query.eq('property_city', city)
   if (search) query = query.or(`owner_name.ilike.%${search}%,property_address.ilike.%${search}%,parcel_id.ilike.%${search}%`)
 
   query = query.order(sortBy, { ascending: sortDir === 'asc' })

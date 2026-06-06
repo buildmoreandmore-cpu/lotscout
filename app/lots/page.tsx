@@ -42,6 +42,10 @@ export default function LotsPage() {
   const [pages, setPages] = useState(1)
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
+  const [county, setCounty] = useState('all')
+  const [city, setCity] = useState('all')
+  const [counties, setCounties] = useState<string[]>([])
+  const [cities, setCities] = useState<{ city: string; county: string }[]>([])
   const [buyBoxId, setBuyBoxId] = useState('')
   const [buyBoxes, setBuyBoxes] = useState<BuyBox[]>([])
   const [sortBy, setSortBy] = useState('leadScore')
@@ -59,6 +63,8 @@ export default function LotsPage() {
     const params = new URLSearchParams()
     if (search) params.set('search', search)
     if (status !== 'all') params.set('status', status)
+    if (county !== 'all') params.set('county', county)
+    if (city !== 'all') params.set('city', city)
     if (buyBoxId) params.set('buybox', buyBoxId)
     params.set('sortBy', sortBy)
     params.set('sortDir', sortDir)
@@ -81,10 +87,16 @@ export default function LotsPage() {
     } finally {
       setLoading(false)
     }
-  }, [search, status, buyBoxId, sortBy, sortDir, page])
+  }, [search, status, county, city, buyBoxId, sortBy, sortDir, page])
 
   useEffect(() => { fetchLots() }, [fetchLots])
   useEffect(() => { fetch('/api/buybox').then(r => r.json()).then(setBuyBoxes) }, [])
+  useEffect(() => {
+    fetch('/api/lots/facets').then(r => r.json()).then(d => {
+      setCounties(d.counties || [])
+      setCities(d.cities || [])
+    }).catch(() => {})
+  }, [])
 
   const handleSort = (col: string) => {
     if (sortBy === col) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -93,8 +105,11 @@ export default function LotsPage() {
 
   const handleExport = async () => {
     const params = new URLSearchParams()
+    params.set('format', 'csv')
     if (buyBoxId) params.set('buybox', buyBoxId)
     if (status !== 'all') params.set('status', status)
+    if (county !== 'all') params.set('county', county)
+    if (city !== 'all') params.set('city', city)
     const res = await fetch(`/api/export?${params}`)
     const blob = await res.blob()
     const url = URL.createObjectURL(blob)
@@ -145,6 +160,16 @@ export default function LotsPage() {
           />
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex sm:gap-3">
+          <select value={county} onChange={e => { setCounty(e.target.value); setCity('all'); setPage(1) }} className="select">
+            <option value="all">All Counties</option>
+            {counties.map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={city} onChange={e => { setCity(e.target.value); setPage(1) }} className="select">
+            <option value="all">All Cities</option>
+            {cities
+              .filter(c => county === 'all' || c.county === county)
+              .map(c => <option key={c.city} value={c.city}>{c.city}</option>)}
+          </select>
           <select value={status} onChange={e => { setStatus(e.target.value); setPage(1) }} className="select">
             <option value="all">All Statuses</option>
             <option value="new">New</option>
